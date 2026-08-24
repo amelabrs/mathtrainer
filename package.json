@@ -1,0 +1,11 @@
+{
+  "name": "mathtrainer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Mental math trainer — local-first, zero build step.",
+  "scripts": {
+    "test": "node --test",
+    "serve": "python3 -m http.server 8090"
+  }
+}

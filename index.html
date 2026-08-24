@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mental Math Trainer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- HOME -->
+    <section id="screen-home" class="screen">
+      <header class="app-header">
+        <h1>Mental Math Trainer</h1>
+        <button id="stats-nav-btn" class="link-btn">Stats &amp; history</button>
+      </header>
+
+      <div class="mode-select" role="tablist" aria-label="Practice mode">
+        <button class="mode-tab" data-mode="technique" role="tab">Technique practice</button>
+        <button class="mode-tab" data-mode="drill" role="tab">Timed drill</button>
+        <button class="mode-tab" data-mode="mixed" role="tab">Mixed review</button>
+      </div>
+      <p id="mode-description" class="mode-description"></p>
+
+      <div id="operation-grid" class="operation-grid"></div>
+
+      <button id="start-btn" class="primary-btn" disabled>Choose an operation to start</button>
+    </section>
+
+    <!-- SESSION -->
+    <section id="screen-session" class="screen hidden">
+      <header class="session-header">
+        <button id="quit-session-btn" class="link-btn">← End session</button>
+        <div class="session-meta">
+          <span id="session-op-level"></span>
+          <span id="session-progress"></span>
+        </div>
+        <div id="session-timer" class="session-timer hidden">0.0s</div>
+      </header>
+
+      <div class="problem-area">
+        <div id="problem-display" class="problem-display"></div>
+        <form id="answer-form" autocomplete="off">
+          <input id="answer-input" type="text" inputmode="numeric" autocomplete="off"
+                 placeholder="?" aria-label="Your answer" />
+        </form>
+        <div id="feedback" class="feedback" aria-live="polite"></div>
+        <button id="hint-btn" class="secondary-btn hidden">Show technique hint</button>
+        <div id="hint-box" class="hint-box hidden"></div>
+      </div>
+    </section>
+
+    <!-- SUMMARY -->
+    <section id="screen-summary" class="screen hidden">
+      <h2>Session summary</h2>
+      <div id="summary-body" class="summary-body"></div>
+      <div class="summary-actions">
+        <button id="summary-again-btn" class="primary-btn">Practice again</button>
+        <button id="summary-home-btn" class="secondary-btn">Home</button>
+      </div>
+    </section>
+
+    <!-- STATS -->
+    <section id="screen-stats" class="screen hidden">
+      <header class="app-header">
+        <h1>Stats &amp; history</h1>
+        <button id="stats-back-btn" class="link-btn">← Back</button>
+      </header>
+      <div id="stats-body" class="stats-body"></div>
+      <button id="reset-btn" class="danger-link-btn">Reset all data</button>
+    </section>
+
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
