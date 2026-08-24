@@ -1,4 +1,4 @@
-import { generateProblem, OPERATIONS, LEVEL_LABELS } from './problemGenerator.js';
+import { generateProblem, OPERATIONS, LEVELS, LEVEL_LABELS } from './problemGenerator.js';
 import { getTechniqueHint } from './techniques.js';
 import * as storage from './storage.js';
 import { evaluateLevel, ROLLING_WINDOW, TIME_THRESHOLD_MS } from './adaptive.js';
@@ -49,6 +49,7 @@ const el = {
   answerForm: document.getElementById('answer-form'),
   answerInput: document.getElementById('answer-input'),
   feedback: document.getElementById('feedback'),
+  nextBtn: document.getElementById('next-btn'),
   hintBtn: document.getElementById('hint-btn'),
   hintBox: document.getElementById('hint-box'),
 
@@ -101,17 +102,43 @@ function renderOperationGrid() {
     const recent = storage.getRecentAttempts(operation, level, ROLLING_WINDOW);
     const accuracy = recent.length ? Math.round((recent.filter((a) => a.correct).length / recent.length) * 100) : null;
 
-    const card = document.createElement('button');
-    card.type = 'button';
+    // A <select> can't legally nest inside a <button>, so the card is a
+    // plain container with a button (pick this operation) and a select
+    // (jump straight to a level — e.g. skip past single digits if they're
+    // too easy) as siblings.
+    const card = document.createElement('div');
     card.className = 'operation-card';
     if (state.operation === operation) card.classList.add('selected');
     if (state.mode === 'mixed') card.classList.add('informational');
-    card.innerHTML = `
+
+    const selectBtn = document.createElement('button');
+    selectBtn.type = 'button';
+    selectBtn.className = 'operation-select-btn';
+    selectBtn.innerHTML = `
       <div class="operation-name">${capitalize(operation)}</div>
-      <div class="operation-level">Level ${level} — ${LEVEL_LABELS[operation][level - 1]}</div>
       <div class="operation-accuracy">${accuracy === null ? 'No recent data' : `${accuracy}% recent accuracy`}</div>
     `;
-    card.addEventListener('click', () => selectOperation(operation));
+    selectBtn.addEventListener('click', () => selectOperation(operation));
+
+    const levelRow = document.createElement('div');
+    levelRow.className = 'level-control';
+    const levelSelect = document.createElement('select');
+    levelSelect.className = 'level-select';
+    levelSelect.setAttribute('aria-label', `${capitalize(operation)} level`);
+    levelSelect.innerHTML = LEVELS.map(
+      (l) => `<option value="${l}" ${l === level ? 'selected' : ''}>Level ${l} — ${LEVEL_LABELS[operation][l - 1]}</option>`
+    ).join('');
+    levelSelect.addEventListener('click', (e) => e.stopPropagation());
+    levelSelect.addEventListener('change', () => {
+      const newLevel = Number(levelSelect.value);
+      state.levels = storage.setLevel(operation, newLevel);
+      renderOperationGrid();
+      if (state.operation) selectMode(state.mode); // refresh start button label if needed
+    });
+    levelRow.appendChild(levelSelect);
+
+    card.appendChild(selectBtn);
+    card.appendChild(levelRow);
     el.operationGrid.appendChild(card);
   }
 }
@@ -180,6 +207,7 @@ function nextProblem() {
   el.answerInput.readOnly = false;
   el.feedback.textContent = '';
   el.feedback.className = 'feedback';
+  el.nextBtn.classList.add('hidden');
   el.hintBox.classList.add('hidden');
   el.hintBox.textContent = '';
   if (state.mode === 'technique') {
@@ -268,8 +296,14 @@ function submitAnswer(userAnswer) {
     el.hintBox.innerHTML = `<strong>${hint.label}.</strong> ${hint.blurb}<br><span class="worked">${hint.worked}</span>`;
   }
 
-  el.sessionProgress.textContent = `Problem ${s.index} of ${SESSION_LENGTH} — press Enter for next`;
+  el.sessionProgress.textContent = `Problem ${s.index} of ${SESSION_LENGTH}`;
+  el.nextBtn.classList.remove('hidden');
+  el.nextBtn.textContent = s.index >= SESSION_LENGTH ? 'See summary (Enter) →' : 'Next (Enter) →';
 }
+
+el.nextBtn.addEventListener('click', () => {
+  if (state.session && state.session.awaitingNext) nextProblem();
+});
 
 function timeThresholdFor(operation, level) {
   return TIME_THRESHOLD_MS[operation][level - 1];
