@@ -24,13 +24,13 @@ export const OPERATION_SYMBOL = {
 export const LEVEL_LABELS = {
   addition: [
     'Single digits (within 20)',
-    'Two-digit + one-digit, no regrouping',
+    'Two-digit + one- or two-digit, no regrouping',
     'Two-digit + two-digit, with regrouping',
     'Three-digit chaining',
   ],
   subtraction: [
     'Single digits (within 20)',
-    'Two-digit − one-digit, no regrouping',
+    'Two-digit − one- or two-digit, no regrouping',
     'Two-digit − two-digit, with regrouping',
     'Three-digit chaining',
   ],
@@ -64,15 +64,29 @@ function makeProblem(operation, level, a, b, technique, correctAnswer) {
 
 function genAddition(level, rng) {
   if (level === 1) {
-    const a = randInt(1, 9, rng);
-    const b = randInt(1, 9, rng);
+    // Uniform 1-9 pairs are mostly trivial near-doubles (8+2, 4+1) — the
+    // facts that actually take an adult a beat to recall are the ones that
+    // cross ten (7+8, 9+6). Weight toward those most of the time.
+    let a, b;
+    if (rng() < 0.7) {
+      a = randInt(2, 9, rng);
+      b = randInt(Math.max(2, 10 - a), 9, rng);
+    } else {
+      a = randInt(1, 9, rng);
+      b = randInt(1, 9, rng);
+    }
     return makeProblem('addition', 1, a, b, 'recall', a + b);
   }
   if (level === 2) {
-    const b = randInt(1, 9, rng);
-    const tens = randInt(1, 9, rng);
-    const units = randInt(0, 9 - b, rng); // guarantees no carry
-    const a = tens * 10 + units;
+    // Bridge toward L3: keep it regroup-free, but let the second operand be
+    // two-digit about half the time so the *magnitude* jump to two two-digit
+    // numbers happens here, before L3 also demands carrying.
+    const bTens = rng() < 0.5 ? 0 : randInt(1, 8, rng);
+    const bUnits = randInt(1, 9, rng);
+    const b = bTens * 10 + bUnits;
+    const aTens = randInt(bTens + 1, 9, rng);
+    const aUnits = randInt(0, 9 - bUnits, rng); // guarantees no carry
+    const a = aTens * 10 + aUnits;
     return makeProblem('addition', 2, a, b, 'no-regroup', a + b);
   }
   if (level === 3) {
@@ -96,16 +110,28 @@ function genAddition(level, rng) {
 
 function genSubtraction(level, rng) {
   if (level === 1) {
-    const b = randInt(1, 9, rng);
-    const diff = randInt(1, 9, rng);
+    // Mirror addition L1: weight toward the "crosses ten" facts (15-8, 13-6)
+    // rather than uniform pairs, which skew toward trivially small ones.
+    let b, diff;
+    if (rng() < 0.7) {
+      b = randInt(2, 9, rng);
+      diff = randInt(Math.max(2, 10 - b), 9, rng);
+    } else {
+      b = randInt(1, 9, rng);
+      diff = randInt(1, 9, rng);
+    }
     const a = b + diff;
     return makeProblem('subtraction', 1, a, b, 'recall', diff);
   }
   if (level === 2) {
-    const b = randInt(1, 9, rng);
-    const tens = randInt(1, 9, rng);
-    const units = randInt(b, 9, rng); // units - b >= 0, no borrow
-    const a = tens * 10 + units;
+    // Bridge toward L3: still regroup-free, but the subtrahend is two-digit
+    // about half the time so magnitude grows here before L3 adds borrowing.
+    const bTens = rng() < 0.5 ? 0 : randInt(1, 8, rng);
+    const bUnits = randInt(1, 9, rng);
+    const aTens = randInt(bTens, 9, rng);
+    const aUnits = randInt(bUnits, 9, rng); // units - b's units >= 0, no borrow
+    const a = aTens * 10 + aUnits;
+    const b = bTens * 10 + bUnits;
     return makeProblem('subtraction', 2, a, b, 'no-regroup', a - b);
   }
   if (level === 3) {

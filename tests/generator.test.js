@@ -28,14 +28,27 @@ for (const operation of OPERATIONS) {
 test('addition L2 never regroups (units never carry)', () => {
   for (let i = 0; i < ITERATIONS; i++) {
     const p = generateProblem('addition', 2);
-    assert.ok((p.a % 10) + p.b < 10, `${p.a} + ${p.b} regroups`);
+    assert.ok((p.a % 10) + (p.b % 10) < 10, `${p.a} + ${p.b} regroups`);
   }
+});
+
+test('addition L2 mixes one- and two-digit second operands', () => {
+  let sawOneDigit = false;
+  let sawTwoDigit = false;
+  for (let i = 0; i < ITERATIONS; i++) {
+    const p = generateProblem('addition', 2);
+    if (p.b < 10) sawOneDigit = true;
+    else sawTwoDigit = true;
+  }
+  assert.ok(sawOneDigit, 'never generated a one-digit second operand');
+  assert.ok(sawTwoDigit, 'never generated a two-digit second operand');
 });
 
 test('subtraction L2 never borrows', () => {
   for (let i = 0; i < ITERATIONS; i++) {
     const p = generateProblem('subtraction', 2);
-    assert.ok(p.a % 10 >= p.b, `${p.a} - ${p.b} borrows`);
+    assert.ok(p.a % 10 >= p.b % 10, `${p.a} - ${p.b} borrows`);
+    assert.ok(p.a >= p.b, `${p.a} - ${p.b} is negative`);
   }
 });
 
@@ -67,6 +80,26 @@ test('multiplication L1 stays within times-tables range (1-12)', () => {
     const p = generateProblem('multiplication', 1);
     assert.ok(p.a >= 1 && p.a <= 12 && p.b >= 1 && p.b <= 12);
   }
+});
+
+test('addition L1 is mostly "crosses ten" facts, not trivial near-doubles', () => {
+  // Regression test: uniform 1-9 pairs skew toward trivial facts (8+2, 4+1).
+  // Most draws should require actually crossing the ten boundary.
+  let crossesTen = 0;
+  for (let i = 0; i < ITERATIONS; i++) {
+    const p = generateProblem('addition', 1);
+    if (p.a + p.b >= 10) crossesTen += 1;
+  }
+  assert.ok(crossesTen / ITERATIONS > 0.55, `only ${crossesTen}/${ITERATIONS} crossed ten`);
+});
+
+test('subtraction L1 is mostly "crosses ten" facts', () => {
+  let crossesTen = 0;
+  for (let i = 0; i < ITERATIONS; i++) {
+    const p = generateProblem('subtraction', 1);
+    if (p.a >= 10) crossesTen += 1;
+  }
+  assert.ok(crossesTen / ITERATIONS > 0.55, `only ${crossesTen}/${ITERATIONS} crossed ten`);
 });
 
 test('generateBatch returns the requested count', () => {
