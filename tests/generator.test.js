@@ -82,24 +82,20 @@ test('multiplication L1 stays within times-tables range (1-12)', () => {
   }
 });
 
-test('addition L1 is mostly "crosses ten" facts, not trivial near-doubles', () => {
+test('addition L1 is always a "crosses ten" fact, never a trivial near-double', () => {
   // Regression test: uniform 1-9 pairs skew toward trivial facts (8+2, 4+1).
-  // Most draws should require actually crossing the ten boundary.
-  let crossesTen = 0;
+  // Every draw should require actually crossing the ten boundary.
   for (let i = 0; i < ITERATIONS; i++) {
     const p = generateProblem('addition', 1);
-    if (p.a + p.b >= 10) crossesTen += 1;
+    assert.ok(p.a + p.b >= 10, `${p.a} + ${p.b} does not cross ten`);
   }
-  assert.ok(crossesTen / ITERATIONS > 0.55, `only ${crossesTen}/${ITERATIONS} crossed ten`);
 });
 
-test('subtraction L1 is mostly "crosses ten" facts', () => {
-  let crossesTen = 0;
+test('subtraction L1 is always a "crosses ten" fact', () => {
   for (let i = 0; i < ITERATIONS; i++) {
     const p = generateProblem('subtraction', 1);
-    if (p.a >= 10) crossesTen += 1;
+    assert.ok(p.a >= 10, `${p.a} - ${p.b} does not cross ten`);
   }
-  assert.ok(crossesTen / ITERATIONS > 0.55, `only ${crossesTen}/${ITERATIONS} crossed ten`);
 });
 
 test('generateBatch returns the requested count', () => {

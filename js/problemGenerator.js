@@ -66,15 +66,9 @@ function genAddition(level, rng) {
   if (level === 1) {
     // Uniform 1-9 pairs are mostly trivial near-doubles (8+2, 4+1) — the
     // facts that actually take an adult a beat to recall are the ones that
-    // cross ten (7+8, 9+6). Weight toward those most of the time.
-    let a, b;
-    if (rng() < 0.7) {
-      a = randInt(2, 9, rng);
-      b = randInt(Math.max(2, 10 - a), 9, rng);
-    } else {
-      a = randInt(1, 9, rng);
-      b = randInt(1, 9, rng);
-    }
+    // cross ten (7+8, 9+6). Only generate those; no easy fallback.
+    const a = randInt(2, 9, rng);
+    const b = randInt(Math.max(2, 10 - a), 9, rng);
     return makeProblem('addition', 1, a, b, 'recall', a + b);
   }
   if (level === 2) {
@@ -110,16 +104,10 @@ function genAddition(level, rng) {
 
 function genSubtraction(level, rng) {
   if (level === 1) {
-    // Mirror addition L1: weight toward the "crosses ten" facts (15-8, 13-6)
-    // rather than uniform pairs, which skew toward trivially small ones.
-    let b, diff;
-    if (rng() < 0.7) {
-      b = randInt(2, 9, rng);
-      diff = randInt(Math.max(2, 10 - b), 9, rng);
-    } else {
-      b = randInt(1, 9, rng);
-      diff = randInt(1, 9, rng);
-    }
+    // Mirror addition L1: only the "crosses ten" facts (15-8, 13-6), which
+    // are the ones that actually take thought — no easy fallback.
+    const b = randInt(2, 9, rng);
+    const diff = randInt(Math.max(2, 10 - b), 9, rng);
     const a = b + diff;
     return makeProblem('subtraction', 1, a, b, 'recall', diff);
   }
